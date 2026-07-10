@@ -38,6 +38,12 @@
 #' principle shadow an *unqualified* top-level column (`id`, `flags`, `dropped`, `absence`)
 #' if a same-named variable happens to be in scope.
 #'
+#' A bare `order`, `group`, or `references` (real column names in some datasets, e.g.
+#' `speciesgrids`, that are also reserved SQL keywords) is always treated as a
+#' double-quoted column identifier, before the variable-lookup above is even attempted --
+#' otherwise DuckDB would reject them unquoted. Qualified forms like `interpreted.order`
+#' don't need this and are unaffected.
+#'
 #' Known limitations: `filter_db()` always emits to `WHERE` (no post-aggregation `HAVING`
 #' support); `group_by_db()` replaces the grouping columns on each call and only takes
 #' effect once `summarize_db()`/`summarise_db()` is called; two `summarize_db()` calls in
@@ -103,6 +109,15 @@ glimpse <- function(x, ...) UseMethod("glimpse")
     e
 })
 
+# DuckDB `reserved` keywords (per duckdb_keywords()) that also happen to be real column
+# names in datasets this package queries (speciesgrids' `order`/`group`/`references`, among
+# others via `source`/`interpreted`) -- bare references to these always need quoting, so
+# they're recognized before any variable-lookup is attempted. Only applies to the exact bare
+# word: qualified forms like `interpreted.order` are unaffected (and don't need this at all,
+# since the dotted struct-field syntax is unambiguous to DuckDB regardless of `order` being
+# reserved).
+.reserved_column_names <- c("order", "group", "references")
+
 # Recursive R-expression -> SQL-text translator. A bare symbol is resolved against `env`
 # (the caller's environment) first; only if that lookup fails is it treated as a column
 # identifier. This is a tree walk, not text substitution on deparse() output, so operators
@@ -114,6 +129,7 @@ glimpse <- function(x, ...) UseMethod("glimpse")
     if (is.symbol(expr)) {
         nm <- as.character(expr)
         if (nm == "") return("NULL")
+        if (nm %in% .reserved_column_names) return(paste0('"', nm, '"'))
         val <- tryCatch(eval(expr, envir = env), error = function(e) .sym_not_found)
         if (identical(val, .sym_not_found)) return(nm)
         if (!is.atomic(val)) {

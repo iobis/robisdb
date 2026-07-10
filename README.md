@@ -291,6 +291,23 @@ con_custom <- connect_duckdb("path/to/my/*.parquet")
 con_custom |> head()
 ```
 
+> [!IMPORTANT]
+> For all cases, when you finish querying the dataset remember to close the connection using `disconnect()`.
+> Example: 
+>```r
+con_sg <- connect_speciesgrids_local("~/data/speciesgrids")
+
+# roll up to a coarser resolution (5), e.g. to aggregate by larger hexagons
+con_sg |>
+    select_db(species, cell) |>
+    filter_db(species == "Abra alba") |>
+    h3_parent_db(cell, resolution = 5) |>
+    collect_db()
+
+# close connection
+disconnect(con_sg)
+```
+
 ## A note on `duckplyr`
 
 [`duckplyr`](https://duckplyr.tidyverse.org) is a great general-purpose lazy `dplyr` backend

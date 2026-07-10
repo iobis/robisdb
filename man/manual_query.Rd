@@ -122,6 +122,12 @@ are never plausible variable names, this rarely creates ambiguity in practice; i
 principle shadow an \emph{unqualified} top-level column (\code{id}, \code{flags}, \code{dropped}, \code{absence})
 if a same-named variable happens to be in scope.
 
+A bare \code{order}, \code{group}, or \code{references} (real column names in some datasets, e.g.
+\code{speciesgrids}, that are also reserved SQL keywords) is always treated as a
+double-quoted column identifier, before the variable-lookup above is even attempted --
+otherwise DuckDB would reject them unquoted. Qualified forms like \code{interpreted.order}
+don't need this and are unaffected.
+
 Known limitations: \code{filter_db()} always emits to \code{WHERE} (no post-aggregation \code{HAVING}
 support); \code{group_by_db()} replaces the grouping columns on each call and only takes
 effect once \code{summarize_db()}/\code{summarise_db()} is called; two \code{summarize_db()} calls in

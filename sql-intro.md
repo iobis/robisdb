@@ -159,24 +159,18 @@ The rule worth remembering: **double quotes (`"..."`) are for identifiers** (col
 names), **single quotes (`'...'`) are for string values** -- e.g. `"order" = 'Cardiida'`, not
 the other way around. Mixing them up is a very common source of confusing errors.
 
-This package's own query-builder verbs (`select_db()`/`filter_db()`/...) pass bare symbols
-straight through as identifiers, so a bare `order` doesn't work there either -- and since
-`order` also happens to be a base R function, you'll actually hit `order` being *found* by
-the variable-lookup fallback (see `?manual_query`) and rejected, rather than a SQL error:
-
-```
-Variable `order` found in the calling environment is not an atomic vector; cannot inline into SQL
-```
-
-If you need to select a reserved-word column through the query builder, write the quotes
-into the R symbol itself with backticks, `` `"order"` `` is an R symbol whose name
-literally is `"order"` (quote characters included), which flows through unchanged:
+This package's own query-builder verbs (`select_db()`/`filter_db()`/...) recognize this
+specific situation and quote it for you: a bare `order`, `group`, or `references` (the three
+real column names that are also reserved words -- see `?manual_query`) is always emitted as
+a double-quoted identifier, so this Just Works, no quoting needed on your end:
 
 ```r
-con_sg |> select_db(species, `"order"`) |> collect_db()
+con_sg |> select_db(species, order) |> filter_db(order == "Cardiida") |> collect_db()
 ```
 
-Simpler in most cases: just drop to raw SQL with `get_query()`/`send_query()` (see below).
+Any *other* bare reserved word you might reference in raw SQL still needs manual
+double-quoting as shown above; this auto-quoting only covers the three names above, which
+are the ones known to actually appear as columns in OBIS's datasets.
 
 ## DuckDB extras used throughout this package
 
