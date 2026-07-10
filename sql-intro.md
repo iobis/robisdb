@@ -36,6 +36,7 @@ where <which rows>;
 For example:
 
 ```sql
+-- comments are written using the two dashes
 select interpreted.scientificName, interpreted.depth
 from obis
 where interpreted.country = 'Brazil';
@@ -56,10 +57,10 @@ only for rows where `country` is `'Brazil'`." SQL is not case-sensitive for keyw
 
 ## Selecting columns
 
-- `select *` -- every column (often expensive on wide/nested tables, see the README).
-- `select colA, colB` -- just the columns you name.
-- `select colA as some_name` -- rename (`AS`) a column in the output.
-- Nested/struct fields are accessed with a dot, e.g. `interpreted.scientificName` -- this is
+- `select *`: every column (often expensive on wide/nested tables, see the README).
+- `select colA, colB`: just the columns you name.
+- `select colA as some_name`: rename (`AS`) a column in the output.
+- Nested/struct fields are accessed with a dot, e.g. `interpreted.scientificName`: this is
   the DuckDB-specific part; plain flat tables wouldn't need it.
 
 ```sql
@@ -131,7 +132,7 @@ order by n desc;
 
 This is one row per distinct `country`, with `n` counting how many `obis` rows had that
 country and `mean_depth` averaging their depths. **Every non-aggregated column in `select`
-must also appear in `group by`** -- this is exactly what `checklist_db()` does internally,
+must also appear in `group by`**: this is exactly what `checklist_db()` does internally,
 grouping by every taxonomic field and counting records per taxon.
 
 ## Reserved words and quoting identifiers
@@ -156,12 +157,12 @@ select species, "order" from obis;   -- works
 ```
 
 The rule worth remembering: **double quotes (`"..."`) are for identifiers** (column/table
-names), **single quotes (`'...'`) are for string values** -- e.g. `"order" = 'Cardiida'`, not
+names), **single quotes (`'...'`) are for string values**, e.g. `"order" = 'Cardiida'`, not
 the other way around. Mixing them up is a very common source of confusing errors.
 
 This package's own query-builder verbs (`select_db()`/`filter_db()`/...) recognize this
 specific situation and quote it for you: a bare `order`, `group`, or `references` (the three
-real column names that are also reserved words -- see `?manual_query`) is always emitted as
+real column names that are also reserved words; see `?manual_query`) is always emitted as
 a double-quoted identifier, so this Just Works, no quoting needed on your end:
 
 ```r
@@ -176,14 +177,12 @@ are the ones known to actually appear as columns in OBIS's datasets.
 
 A few DuckDB-specific functions/behaviors you'll see if you read the SQL `show_sql()` prints:
 
-- `list_contains(a_list_column, value)` / `len(a_list_column)` -- work with `LIST` columns
+- `list_contains(a_list_column, value)` / `len(a_list_column)`: work with `LIST` columns
   (e.g. `flags`, `node_ids`), which aren't a standard-SQL concept.
-- `list_filter(a_list, x -> <condition on x>)` / `list_transform(a_list, x -> <expr on x>)`
-  -- DuckDB's lambda syntax for filtering/transforming list elements, used for the
+- `list_filter(a_list, x -> <condition on x>)` / `list_transform(a_list, x -> <expr on x>)`: DuckDB's lambda syntax for filtering/transforming list elements, used for the
   `mof`/`dna` extension columns.
-- `ST_Intersects(geom_a, geom_b)`, `ST_GeomFromText('<WKT>')`, `ST_Buffer(geom, distance)`
-  -- spatial functions from DuckDB's `spatial` extension (see `filter_spatial_db()`).
-- `struct_extract(a_struct, 'field')` -- the function-call form of `a_struct.field`.
+- `ST_Intersects(geom_a, geom_b)`, `ST_GeomFromText('<WKT>')`, `ST_Buffer(geom, distance)`: spatial functions from DuckDB's `spatial` extension (see `filter_spatial_db()`).
+- `struct_extract(a_struct, 'field')`: the function-call form of `a_struct.field`.
 
 ## Running SQL yourself
 
@@ -208,7 +207,7 @@ con |>
     filter_db(interpreted.aphiaid == 955271) |>
     group_by_db(interpreted.country) |>
     summarize_db(n = n()) |>
-    show_sql() |>   # prints the exact SQL being run -- a good way to learn by comparison
+    show_sql() |>   # prints the exact SQL being run, a good way to learn by comparison
     collect_db()
 ```
 

@@ -28,7 +28,7 @@ local copy first:
 ```r
 library(robisdb)
 
-# ~ a few hundred GB -- do this once, then re-run occasionally to pick up updates
+# ~ a few hundred GB, do this once, then re-run occasionally to pick up updates
 sync_opendata("~/data/obis-open-data")
 
 # or, if you have the AWS CLI installed, this is often faster (parallel transfers, retries)
@@ -60,12 +60,12 @@ Currently we offer connections to three datasets:
 Working directly with the S3 versions (no local sync) can still be reasonable if:
 
 1. You are working with `speciesgrids`, which is small enough to stream directly, or
-2. You are targeting a small subset of `open-data` (the full OBIS dataset) -- in this case,
+2. You are targeting a small subset of `open-data` (the full OBIS dataset), in this case,
    make sure to filter by `dataset_id`.
 
 ## Occurrence records: `occurrence_db()`
 
-The simplest way to query the `open-data` dataset -- `occurrence_db()` mirrors
+The simplest way to query the `open-data` dataset. `occurrence_db()` mirrors
 [`robis::occurrence()`](https://iobis.github.io/robis/reference/occurrence.html):
 
 ```r
@@ -110,7 +110,7 @@ occ_dna <- con |> occurrence_db(taxonid = 955271, dna = TRUE)
 dna_db(occ_dna)
 ```
 
-Filter on geometry, dates, depth, quality flags, and more -- see `?occurrence_db` for the
+Filter on geometry, dates, depth, quality flags, and more. See `?occurrence_db` for the
 full parameter list (it closely follows `robis::occurrence()`'s).
 
 Set `verbose = TRUE` on any of these functions to print the SQL before it runs.
@@ -118,7 +118,7 @@ Set `verbose = TRUE` on any of these functions to print the SQL before it runs.
 > [!TIP]
 > We recommend setting `verbose = TRUE` while you're learning, because ultimately the best
 > way to work with these datasets in DuckDB is to learn SQL yourself. `robisdb` only covers
-> the most common operations -- learning SQL will open up many more possibilities. Check out
+> the most common operations. Learning SQL will open up many more possibilities. Check out
 > the [SQL introduction](sql-intro.md) for the basics.
 
 ## Species checklists: `checklist_db()`
@@ -141,7 +141,7 @@ For anything the functions above don't cover, a small set of `select_db()`/`muta
 step by step against the underlying `obis` view.
 
 This isn't meant to cover every possible query, and it isn't meant to replace `duckplyr`
-either -- but `duckplyr` doesn't (yet) work well with `open-data`'s nested structure, and it
+either, but `duckplyr` doesn't (yet) work well with `open-data`'s nested structure, and it
 carries a [fallback-to-full-materialization risk](#a-note-on-duckplyr) (see below).
 
 Nothing runs until you call `collect_db()` (or `show_sql()`, which only prints the query):
@@ -195,7 +195,7 @@ con |> select_db(interpreted.depth) |>
 
 **Always narrow with `select_db()`/`mutate_db()`/`group_by_db()` before `collect_db()`.**
 Left untouched, the query defaults to `select *`, which pulls this dataset's full nested
-`source`/`interpreted`/`extensions` structs -- slow to materialize at this scale.
+`source`/`interpreted`/`extensions` structs, slow to materialize at this scale.
 
 For a quick look at the raw schema, `head()`/`glimpse()` always sample a handful of rows
 directly, and `colnames()` lists every column name, both ignoring any query you've built:
@@ -244,7 +244,7 @@ con |>
 hierarchy the same way.
 
 The H3 extension is especially handy with the [`speciesgrids`](https://github.com/iobis/speciesgrids)
-dataset, which already ships a pre-computed H3 (resolution 7) `cell` column -- there's no
+dataset, which already ships a pre-computed H3 (resolution 7) `cell` column, there's no
 need to compute an index yourself, just move it to whichever resolution you need:
 
 ```r
@@ -267,7 +267,7 @@ con_sg |>
 ## Working directly with SQL
 
 For anything not covered by the functions above, run SQL yourself with `get_query()`/
-`send_query()` -- both accept a `robisdb_conn` directly (or a raw connection, e.g.
+`send_query()`: both accept a `robisdb_conn` directly (or a raw connection, e.g.
 `con$connection`, if you have one). See [sql-intro.md](sql-intro.md) for a short primer if
 you're new to SQL.
 
@@ -314,7 +314,7 @@ con_custom |> head()
 for DuckDB (and we recommend it for R users starting to work with DuckDB), but it doesn't
 reach `open-data`'s deeply nested struct columns well enough to replace the verbs above, and
 it silently materializes the *entire* table into R memory on any operation it can't
-translate -- exactly the failure mode this package is built to avoid.
+translate, exactly the failure mode this package is built to avoid.
 
 `to_duckplyr(con)` is provided as an explicitly experimental escape hatch for ad hoc
 interactive exploration (it flattens `interpreted`/`source`/`extensions` one level via
