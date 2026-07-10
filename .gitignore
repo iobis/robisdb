@@ -1,0 +1,5 @@
+.Rproj.user
+_*
+.env
+.Rproj
+data_tests/
