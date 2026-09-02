@@ -1,6 +1,6 @@
 Package: robisdb
 Title: Fast Access to OBIS Data via DuckDB and Parquet
-Version: 0.0.0.9000
+Version: 0.0.1
 Authors@R:
     person("Silas", "Principe", , "silasprincipe5@gmail.com", role = c("aut", "cre"))
 Description: Query OBIS (Ocean Biodiversity Information System) open data and
