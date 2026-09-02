@@ -60,7 +60,7 @@ glimpse(x, ...)
 
 \method{head}{robisdb_conn}(x, n = 10L, ...)
 
-\method{glimpse}{robisdb_conn}(x, ...)
+\method{glimpse}{robisdb_conn}(x, nested = TRUE, ...)
 
 \method{dimnames}{robisdb_conn}(x)
 }
@@ -73,6 +73,9 @@ select list; for \code{mutate_db()}/\code{summarize_db()}/\code{summarise_db()},
 (AND-ed together); for \code{group_by_db()}, bare (optionally named) grouping columns.}
 
 \item{n}{for \code{head.robisdb_conn()}, the number of rows to sample (default \code{10}).}
+
+\item{nested}{for \code{glimpse.robisdb_conn()}, wheter to also show the glimpse for the interpreted field,
+if this is present (default to \code{TRUE}).}
 }
 \value{
 \code{select_db()}, \code{mutate_db()}, \code{filter_db()}, \code{group_by_db()} return the modified

@@ -4,18 +4,22 @@
 \alias{measurements_db}
 \title{Extract measurements from an \code{occurrence_db()} result}
 \usage{
-measurements_db(df, fields = "id")
+measurements_db(df, fields = "id", raw = FALSE)
 }
 \arguments{
-\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna}.}
+\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna} (or, with
+\code{raw = TRUE}, a raw query result including \code{`_id`} and \code{extensions}).}
 
-\item{fields}{columns from \code{df} to carry over into the long-format result (\code{"id"} is
-always included).}
+\item{fields}{columns from \code{df} to carry over into the long-format result (the id column
+is always included).}
+
+\item{raw}{whether \code{df} is a raw manual-query result rather than an \code{\link[=occurrence_db]{occurrence_db()}}
+result (default \code{FALSE}).}
 }
 \value{
 a \code{tibble}, one row per measurement.
 }
 \description{
-Convenience wrapper: \code{unnest_extension_db(df, "MeasurementOrFact", fields)}. Mirrors
+Convenience wrapper: \code{unnest_extension_db(df, "MeasurementOrFact", fields, raw)}. Mirrors
 \code{\link[robis:measurements]{robis::measurements()}}. See \code{\link[=dna_db]{dna_db()}} for the \code{DNADerivedData} equivalent.
 }

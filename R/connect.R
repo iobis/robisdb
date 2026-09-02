@@ -468,7 +468,8 @@ disconnect <- function(.obj) {
 #'
 #' @param connection a `robisdb_conn` (its underlying connection is used automatically)
 #'   or a raw `duckdb_connection`.
-#' @param query a SQL string.
+#' @param query a SQL string or a path to a SQL file. If you pass a file, make sure the
+#'  `from` field refers to `obis`.
 #' @return `get_query()` returns the query result as a `data.frame`; `send_query()`
 #'   returns the `duckdb_result` from [DBI::dbSendQuery()].
 #' @name raw_query
@@ -477,6 +478,10 @@ NULL
 #' @rdname raw_query
 #' @export
 get_query <- function(connection, query) {
+    if (grepl("\\.sql$", query)) {
+        if (!file.exists(query)) .a("You passed a file to query, but it does not exist.")
+        query <- readLines(query, warn = FALSE)
+    }
     DBI::dbGetQuery(.resolve_connection(connection), query)
 }
 

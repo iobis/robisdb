@@ -14,7 +14,8 @@ send_query(connection, query)
 \item{connection}{a \code{robisdb_conn} (its underlying connection is used automatically)
 or a raw \code{duckdb_connection}.}
 
-\item{query}{a SQL string.}
+\item{query}{a SQL string or a path to a SQL file. If you pass a file, make sure the
+\code{from} field refers to \code{obis}.}
 }
 \value{
 \code{get_query()} returns the query result as a \code{data.frame}; \code{send_query()}

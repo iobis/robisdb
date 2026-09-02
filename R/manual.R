@@ -55,6 +55,8 @@
 #'   (the resulting column aliases); for `filter_db()`, one or more boolean expressions
 #'   (AND-ed together); for `group_by_db()`, bare (optionally named) grouping columns.
 #' @param n for `head.robisdb_conn()`, the number of rows to sample (default `10`).
+#' @param nested for `glimpse.robisdb_conn()`, wheter to also show the glimpse for the interpreted field,
+#'  if this is present (default to `TRUE`).
 #' @return `select_db()`, `mutate_db()`, `filter_db()`, `group_by_db()` return the modified
 #'   `robisdb_conn`. `summarize_db()`/`summarise_db()` return the modified `robisdb_conn`
 #'   with the select list replaced by the grouping columns and aggregate expressions.
@@ -365,9 +367,14 @@ head.robisdb_conn <- function(x, n = 10L, ...) {
 
 #' @rdname manual_query
 #' @export
-glimpse.robisdb_conn <- function(x, ...) {
+glimpse.robisdb_conn <- function(x, nested = TRUE, ...) {
     sample_df <- tibble::as_tibble(DBI::dbGetQuery(x$connection, "select * from obis limit 10;"))
     pillar::glimpse(sample_df, ...)
+    if ("interpreted" %in% colnames(sample_df) && nested) {
+        sample_df_int <- tidyr::unnest(sample_df, cols = interpreted)
+        cli::cat_line("\n`interpreted` field. Access it with `interpreted.[name]`")
+        pillar::glimpse(sample_df_int, ...)
+    }
     invisible(x)
 }
 

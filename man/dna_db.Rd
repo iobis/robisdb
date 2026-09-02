@@ -4,18 +4,22 @@
 \alias{dna_db}
 \title{Extract DNA-derived data from an \code{occurrence_db()} result}
 \usage{
-dna_db(df, fields = "id")
+dna_db(df, fields = "id", raw = FALSE)
 }
 \arguments{
-\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna}.}
+\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna} (or, with
+\code{raw = TRUE}, a raw query result including \code{`_id`} and \code{extensions}).}
 
-\item{fields}{columns from \code{df} to carry over into the long-format result (\code{"id"} is
-always included).}
+\item{fields}{columns from \code{df} to carry over into the long-format result (the id column
+is always included).}
+
+\item{raw}{whether \code{df} is a raw manual-query result rather than an \code{\link[=occurrence_db]{occurrence_db()}}
+result (default \code{FALSE}).}
 }
 \value{
 a \code{tibble}, one row per DNA-derived-data record.
 }
 \description{
-Convenience wrapper: \code{unnest_extension_db(df, "DNADerivedData", fields)}. See
+Convenience wrapper: \code{unnest_extension_db(df, "DNADerivedData", fields, raw)}. See
 \code{\link[=measurements_db]{measurements_db()}} for the \code{MeasurementOrFact} equivalent.
 }

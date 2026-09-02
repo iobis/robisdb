@@ -7,16 +7,21 @@
 unnest_extension_db(
   df,
   extension = c("MeasurementOrFact", "DNADerivedData"),
-  fields = "id"
+  fields = "id",
+  raw = FALSE
 )
 }
 \arguments{
-\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna}.}
+\item{df}{an \code{\link[=occurrence_db]{occurrence_db()}} result that includes \code{id} and \code{mof}/\code{dna} (or, with
+\code{raw = TRUE}, a raw query result including \code{`_id`} and \code{extensions}).}
 
 \item{extension}{which extension to unnest: \code{"MeasurementOrFact"} or \code{"DNADerivedData"}.}
 
-\item{fields}{columns from \code{df} to carry over into the long-format result (\code{"id"} is
-always included).}
+\item{fields}{columns from \code{df} to carry over into the long-format result (the id column
+is always included).}
+
+\item{raw}{whether \code{df} is a raw manual-query result rather than an \code{\link[=occurrence_db]{occurrence_db()}}
+result (default \code{FALSE}).}
 }
 \value{
 a \code{tibble}, one row per measurement/DNA record.
@@ -24,9 +29,18 @@ a \code{tibble}, one row per measurement/DNA record.
 \description{
 Reshapes an \code{\link[=occurrence_db]{occurrence_db()}} result that includes an \code{mof}/\code{dna} list-column (see its
 \code{mof}/\code{dna} parameters) from one row per occurrence into one row per measurement/DNA
-record, repeating \code{fields} (always including \code{id}) for each. Occurrences with no records
-for that extension are dropped. Mirrors \code{\link[robis:unnest_extension]{robis::unnest_extension()}}; unlike that
-function, no column-padding step is needed here, since \code{\link[=occurrence_db]{occurrence_db()}}'s \code{mof}/\code{dna}
-columns already have a uniform column set per record (a fixed parquet struct schema,
-not per-record sparse JSON).
+record, repeating \code{fields} (always including the id column) for each. Occurrences with
+no records for that extension are dropped. Mirrors \code{\link[robis:unnest_extension]{robis::unnest_extension()}}; unlike
+that function, no column-padding step is needed here, since \code{\link[=occurrence_db]{occurrence_db()}}'s
+\code{mof}/\code{dna} columns already have a uniform column set per record (a fixed parquet struct
+schema, not per-record sparse JSON).
+
+With \code{raw = TRUE}, \code{df} is instead treated as the raw shape returned by a manual query
+against the \code{obis} table (e.g. via \code{select_db()}/\code{collect_db()}, not \code{\link[=occurrence_db]{occurrence_db()}}):
+the id column is \code{`_id`} rather than \code{id}, and both extensions live nested under a
+single \code{extensions} column, keyed by URI, rather than split into
+top-level \code{mof}/\code{dna} columns. Each entry there is a list of records carrying the raw
+Darwin Core fields under \code{source}, wrapper \code{`_id`/`_event_id`/`_occurrence_id`/id}
+fields, and \code{level}; the wrapper fields are dropped and \code{source}'s fields promoted
+alongside \code{level}, matching the shape of \code{\link[=occurrence_db]{occurrence_db()}}'s \code{mof}/\code{dna} columns.
 }
