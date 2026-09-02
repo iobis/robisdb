@@ -481,6 +481,7 @@ get_query <- function(connection, query) {
     if (grepl("\\.sql$", query)) {
         if (!file.exists(query)) .a("You passed a file to query, but it does not exist.")
         query <- readLines(query, warn = FALSE)
+        query <- paste(query, collapse = "\n")
     }
     DBI::dbGetQuery(.resolve_connection(connection), query)
 }
