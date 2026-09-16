@@ -470,6 +470,7 @@ disconnect <- function(.obj) {
 #'   or a raw `duckdb_connection`.
 #' @param query a SQL string or a path to a SQL file. If you pass a file, make sure the
 #'  `from` field refers to `obis`.
+#' @param ... additional paramters passed to DBI functions
 #' @return `get_query()` returns the query result as a `data.frame`; `send_query()`
 #'   returns the `duckdb_result` from [DBI::dbSendQuery()].
 #' @name raw_query
@@ -477,19 +478,24 @@ NULL
 
 #' @rdname raw_query
 #' @export
-get_query <- function(connection, query) {
+get_query <- function(connection, query, ...) {
     if (grepl("\\.sql$", query)) {
         if (!file.exists(query)) .a("You passed a file to query, but it does not exist.")
         query <- readLines(query, warn = FALSE)
         query <- paste(query, collapse = "\n")
     }
-    DBI::dbGetQuery(.resolve_connection(connection), query)
+    DBI::dbGetQuery(.resolve_connection(connection), query, ...)
 }
 
 #' @rdname raw_query
 #' @export
-send_query <- function(connection, query) {
-    DBI::dbSendQuery(.resolve_connection(connection), query)
+send_query <- function(connection, query, ...) {
+    if (grepl("\\.sql$", query)) {
+        if (!file.exists(query)) .a("You passed a file to query, but it does not exist.")
+        query <- readLines(query, warn = FALSE)
+        query <- paste(query, collapse = "\n")
+    }
+    DBI::dbSendQuery(.resolve_connection(connection), query, ...)
 }
 
 # Resolves either a `robisdb_conn` or an already-raw connection to the raw duckdb

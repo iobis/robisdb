@@ -6,9 +6,9 @@
 \alias{send_query}
 \title{Run a raw SQL query against a connection}
 \usage{
-get_query(connection, query)
+get_query(connection, query, ...)
 
-send_query(connection, query)
+send_query(connection, query, ...)
 }
 \arguments{
 \item{connection}{a \code{robisdb_conn} (its underlying connection is used automatically)
@@ -16,6 +16,8 @@ or a raw \code{duckdb_connection}.}
 
 \item{query}{a SQL string or a path to a SQL file. If you pass a file, make sure the
 \code{from} field refers to \code{obis}.}
+
+\item{...}{additional paramters passed to DBI functions}
 }
 \value{
 \code{get_query()} returns the query result as a \code{data.frame}; \code{send_query()}
