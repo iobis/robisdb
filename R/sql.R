@@ -30,10 +30,11 @@
 }
 
 # Converts a Date/character date (or vector of dates) to a Unix epoch (seconds, UTC),
-# matching how `interpreted.date_mid`/etc. are stored
+# matching how `interpreted.date_mid`/etc. are stored - note that it is miliseconds for
+# obis-open-data
 .sql_epoch <- function(date) {
     if (is.character(date)) date <- as.Date(date)
-    as.numeric(as.POSIXct(date, tz = "UTC"))
+    as.numeric(as.POSIXct(date, tz = "UTC")) * 1000
 }
 
 # The `extensions` column is a struct keyed by extension type URI, each value
