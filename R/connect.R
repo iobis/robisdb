@@ -3,12 +3,17 @@
     c("open-data", "speciesgrids", "obistherm")
 }
 
+# speciesgrids/h3_7 holds the partition files (named by 3-digit H3 base cell prefix, e.g.
+# `000`, `021`, no extension) plus a `data.parquet` with the full data. Reading both would
+# duplicate every record, so only the partitions are matched.
+.sg_glob <- "[0-9][0-9][0-9]"
+
 # Resolves the `read_parquet()` glob/URI for a given connection type: a local glob under
 # `path` for the `*-local` variants, or the dataset's public S3 URI otherwise
 .get_path <- function(which_con, path = NULL) {
     if (!is.null(path)) {
         if (which_con == "speciesgrids-local") {
-            parquet_path <- file.path(path, "*")
+            parquet_path <- file.path(path, .sg_glob)
         } else if (which_con == "open-data-local") {
             parquet_path <- file.path(path, "*.parquet")
         } else if (which_con == "obistherm-local") {
@@ -18,7 +23,7 @@
         }
     } else {
         if (which_con == "speciesgrids") {
-            parquet_path <- "s3://obis-products/speciesgrids/h3_7/*"
+            parquet_path <- paste0("s3://obis-products/speciesgrids/h3_7/", .sg_glob)
         } else if (which_con == "open-data") {
             parquet_path <- "s3://obis-open-data/occurrence/*.parquet"
         } else if (which_con == "obistherm") {
@@ -253,9 +258,11 @@ connect_obistherm <- function(...) {
 #' @param bucket the S3 bucket name.
 #' @param s3_prefix the folder (key prefix) within the bucket to sync.
 #' @param local_dir local destination directory (created if it doesn't exist).
+#' @param exclude optional character vector of file names/paths (relative to `s3_prefix`)
+#'   to skip. Supports `*` wildcards (e.g. `"*.csv"`).
 #' @return `NULL`, invisibly (called for its side effect of downloading files).
 #' @export
-sync_public_s3_folder <- function(bucket, s3_prefix, local_dir) {
+sync_public_s3_folder <- function(bucket, s3_prefix, local_dir, exclude = NULL) {
     s3 <- paws::s3(credentials = list(anonymous = TRUE))
 
     if (!grepl("/$", s3_prefix)) s3_prefix <- paste0(s3_prefix, "/")
@@ -288,6 +295,8 @@ sync_public_s3_folder <- function(bucket, s3_prefix, local_dir) {
             relative_path <- gsub(paste0("^", s3_prefix), "", item$Key)
             local_file_path <- file.path(local_dir, relative_path)
 
+            if (!is.null(exclude) && .matches_glob(relative_path, exclude)) next
+
             if (!dir.exists(dirname(local_file_path))) {
                 dir.create(dirname(local_file_path), recursive = TRUE)
             }
@@ -315,6 +324,19 @@ sync_public_s3_folder <- function(bucket, s3_prefix, local_dir) {
     message("Sync complete!\n")
 }
 
+# TRUE if `x` matches any of the shell-style wildcard patterns (`*`) in `patterns`
+.matches_glob <- function(x, patterns) {
+    any(vapply(patterns, function(p) {
+        re <- paste0("^", paste(
+            vapply(strsplit(p, "*", fixed = TRUE)[[1]], function(piece) {
+                gsub("([][{}()+?.^$|\\\\])", "\\\\\\1", piece)
+            }, character(1)),
+            collapse = ".*"
+        ), if (grepl("\\*$", p)) ".*", "$")
+        grepl(re, x)
+    }, logical(1)))
+}
+
 # True if the `aws` CLI is available on PATH
 .has_aws_cli <- function() {
     nzchar(Sys.which("aws"))
@@ -335,9 +357,11 @@ sync_public_s3_folder <- function(bucket, s3_prefix, local_dir) {
 #' @param bucket the S3 bucket name.
 #' @param s3_prefix the folder (key prefix) within the bucket to sync.
 #' @param local_dir local destination directory (created if it doesn't exist).
+#' @param exclude optional character vector of file names/patterns (relative to
+#'   `s3_prefix`) to skip, passed to `aws s3 sync --exclude`.
 #' @return `NULL`, invisibly (called for its side effect of downloading files).
 #' @export
-sync_public_s3_folder_cli <- function(bucket, s3_prefix, local_dir) {
+sync_public_s3_folder_cli <- function(bucket, s3_prefix, local_dir, exclude = NULL) {
     if (!.has_aws_cli()) {
         .a("The AWS CLI ({.field aws}) was not found on your PATH. Install it
            (see https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
@@ -351,7 +375,11 @@ sync_public_s3_folder_cli <- function(bucket, s3_prefix, local_dir) {
     }
 
     s3_uri <- sprintf("s3://%s/%s", bucket, s3_prefix)
-    status <- system2("aws", c("s3", "sync", shQuote(s3_uri), shQuote(local_dir), "--no-sign-request"))
+    args <- c("s3", "sync", shQuote(s3_uri), shQuote(local_dir), "--no-sign-request")
+    if (!is.null(exclude)) {
+        args <- c(args, as.vector(rbind("--exclude", shQuote(exclude))))
+    }
+    status <- system2("aws", args)
     if (status != 0) .a("`aws s3 sync` exited with a non-zero status ({status})")
 
     message("Sync complete!\n")
@@ -368,6 +396,9 @@ sync_public_s3_folder_cli <- function(bucket, s3_prefix, local_dir) {
 #' copy with [connect_speciesgrids_local()]/[connect_obistherm_local()]/
 #' [connect_opendata_local()] (much faster than streaming from S3 directly).
 #'
+#' For speciesgrids, the full-data `data.parquet` file in the bucket is skipped: the
+#' partition files hold the same records and reading both would duplicate them.
+#'
 #' @param path local destination directory (created if it doesn't exist).
 #' @return `NULL`, invisibly (called for its side effect of downloading files).
 #' @name sync_dataset
@@ -379,7 +410,8 @@ sync_speciesgrids <- function(path) {
   sync_public_s3_folder(
     bucket = "obis-products",
     s3_prefix = "speciesgrids/h3_7/",
-    local_dir = path
+    local_dir = path,
+    exclude = "data.parquet"
   )
 }
 
@@ -409,7 +441,8 @@ sync_speciesgrids_cli <- function(path) {
   sync_public_s3_folder_cli(
     bucket = "obis-products",
     s3_prefix = "speciesgrids/h3_7/",
-    local_dir = path
+    local_dir = path,
+    exclude = "data.parquet"
   )
 }
 

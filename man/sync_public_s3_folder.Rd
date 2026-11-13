@@ -4,7 +4,7 @@
 \alias{sync_public_s3_folder}
 \title{Sync a public, unauthenticated S3 folder to a local directory}
 \usage{
-sync_public_s3_folder(bucket, s3_prefix, local_dir)
+sync_public_s3_folder(bucket, s3_prefix, local_dir, exclude = NULL)
 }
 \arguments{
 \item{bucket}{the S3 bucket name.}
@@ -12,6 +12,9 @@ sync_public_s3_folder(bucket, s3_prefix, local_dir)
 \item{s3_prefix}{the folder (key prefix) within the bucket to sync.}
 
 \item{local_dir}{local destination directory (created if it doesn't exist).}
+
+\item{exclude}{optional character vector of file names/paths (relative to \code{s3_prefix})
+to skip. Supports \code{*} wildcards (e.g. \code{"*.csv"}).}
 }
 \value{
 \code{NULL}, invisibly (called for its side effect of downloading files).

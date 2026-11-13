@@ -36,4 +36,7 @@ variants use \code{\link[=sync_public_s3_folder_cli]{sync_public_s3_folder_cli()
 installed -- often faster for a dataset this size). Once synced, connect to the local
 copy with \code{\link[=connect_speciesgrids_local]{connect_speciesgrids_local()}}/\code{\link[=connect_obistherm_local]{connect_obistherm_local()}}/
 \code{\link[=connect_opendata_local]{connect_opendata_local()}} (much faster than streaming from S3 directly).
+
+For speciesgrids, the full-data \code{data.parquet} file in the bucket is skipped: the
+partition files hold the same records and reading both would duplicate them.
 }
